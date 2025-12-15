@@ -1,0 +1,9 @@
+# add files to be ignored by git 
+**/.~*
+**/*~*
+**/*.log
+**/*.aux
+**/*.out
+
+
+
