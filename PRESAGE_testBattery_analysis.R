@@ -5,7 +5,7 @@
 # Manuscript: "A cross-domain test battery for comprehensive hearing loss
 # characterisation using functional, physiological, and vestibular measures"
 #
-# Code version: 1.0 (December, 2025)
+# Code version: 1.1 (March, 2026)
 # 
 # Authors: 
 # - Shiran Koifman (shiran.koifman@uol.de)
@@ -1103,24 +1103,22 @@ df_w$dpoae_response_count = apply(
   }
 )
 
-# How many IDs had absent response > 1 and per level (65 dB and 68 dB)?
-df_w %>%
-  group_by(dpoae_tar_lev_BE, centre) %>%
-  dplyr::count(., dpoae_absent_count)
-
+# How many IDs had absent response > 2?
 df_w %>% 
-  filter(dpoae_absent_count > 1) %>% 
+  filter(dpoae_response_count < 2) %>% 
   select(id, matrix_testear, dpoae_tar_lev_BE, dpoae_absent_count, dpoae_res_1khz_BE, dpoae_res_2khz_BE, dpoae_res_4khz_BE)
 
 # Global pass criterion: (i.e., minimum 2 out of 3 valid responses)
 df_w %>%
-  filter(!is.na(dpoae_tar_lev_l)) %>%
-  summarise(total = n(),
-            n_below_3 = sum(dpoae_response_count < 2),
-            proportion = round(n_below_3 / total,1)*100)
-# --> 50 out of 55 subjects (90%) fulfilled the global pass criterion
-# total n_below_3 proportion
-# 1    55         5         10
+  filter(!is.na(dpoae_response_count)) %>%
+  group_by(group) %>%
+  summarise(total_ids = n_distinct(id),
+            global_pass_ids = n_distinct(id[dpoae_response_count >= 2]),
+            proportion = round(global_pass_ids / total_ids, 2) * 100)
+
+# --> 52 out of 55 subjects (95%) fulfilled the global pass criterion
+# group total_ids global_pass_ids proportion
+# 1            55              52         95
 
 # check limits:
 psych::describeBy(df_w[c("dpoae_snr_1khz_BE", "dpoae_snr_2khz_BE","dpoae_snr_4khz_BE")], group = df_w$group, mat = TRUE, digits = 1)
@@ -1223,9 +1221,9 @@ df_summary_freq <- df_w %>%
 
 #### --- Compute pass proportion -----------------------------------------------
 df_summary_pass <- df_w %>%
-  filter(!is.na(dpoae_absent_count)) %>%
+  filter(!is.na(dpoae_response_count)) %>%
   summarise(frequency = "global \npass criterion",
-            n_present = sum(dpoae_absent_count < 2),
+            n_present = sum(dpoae_response_count >= 2),
             total = n(),
             pct = round(100 * n_present / total),
             label = paste0(pct, "%\n(", n_present, "/", total, ")"))
@@ -1314,25 +1312,27 @@ df_w$teoae_response_count = apply(
   }
 )
 
-# How many IDs had absent response > 1?
+# How many IDs had absent response?
 df_w %>% 
   group_by(group, centre) %>%
   dplyr::count(., teoae_absent_count)
 
 # Who is it & at what freq? (present=1; absent=2)
 df_w %>% 
-  filter(teoae_absent_count > 3) %>% 
-  select(id, centre, teoae_absent_count, teoae_res_1k_BE, teoae_res_2k_BE, teoae_res_3k_BE, teoae_res_4k_BE, teoae_res_5k_BE)
+  filter(teoae_response_count < 3) %>% 
+  select(id, age, centre, teoae_response_count, teoae_absent_count, teoae_res_1k_BE, teoae_res_2k_BE, teoae_res_3k_BE, teoae_res_4k_BE, teoae_res_5k_BE)
 
 # Global pass criterion (i.e., minimum 3 out of 5 valid responses)
 df_w %>%
-  filter(!is.na(teoae_absent_count)) %>%
-  summarise(total = n(),
-            n_below_4 = sum(teoae_absent_count <= 3),
-            proportion = round(n_below_4 / total,3)*100)
-# --> 45 out of 53 subjects (85.9%) fulfilled the global pass criterion
-# total n_below_4 proportion
-# 1    53        45       84.9
+  filter(!is.na(teoae_response_count)) %>%
+  group_by(group) %>%
+  summarise(total_ids = n_distinct(id),
+            global_pass = n_distinct(id[teoae_response_count >= 3]),
+            proportion = round(global_pass / total_ids, 2) * 100)
+
+# --> 37 out of 53 subjects (70%) fulfilled the global pass criterion
+# group total_ids global_pass proportion
+# 1            53          37         70
 
 # check limits:
 psych::describeBy(df_w[c("teoae_snr_1k_BE", "teoae_snr_2k_BE","teoae_snr_3k_BE",
@@ -1437,9 +1437,9 @@ df_summary_freq <- df_w %>%
 
 #### --- Compute pass proportion -----------------------------------------------
 df_summary_pass <- df_w %>%
-  filter(!is.na(teoae_absent_count)) %>%
+  filter(!is.na(teoae_response_count)) %>%
   summarise(frequency = "global \npass criterion",
-            n_present = sum(teoae_absent_count <= 3),
+            n_present = sum(teoae_response_count >= 3),
             total = n(),
             pct = round(100 * n_present / total),
             label = paste0(pct, "%\n(", n_present, "/", total, ")"))

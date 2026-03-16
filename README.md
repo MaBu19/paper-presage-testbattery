@@ -2,6 +2,7 @@
 
 ## Manuscript: "A cross-domain test battery for comprehensive hearing loss characterisation using functional, physiological, and vestibular measures"
 - Code version: 1.0 (December, 2025)
+- Code version: 1.1 (March, 2026)
 
 ## Authors: 
 - Shiran Koifman (shiran.koifman@uol.de)
